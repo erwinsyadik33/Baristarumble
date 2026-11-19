@@ -157,6 +157,15 @@ kbd{display:inline-block;min-width:26px;padding:2px 7px;margin:0 2px;font:bold 1
 #rst div{animation:rowIn .4s cubic-bezier(.2,.9,.25,1) both}#rst div:nth-child(2){animation-delay:.1s}#rst div:nth-child(3){animation-delay:.18s}#rst div:nth-child(4){animation-delay:.26s}#rst div:nth-child(5){animation-delay:.34s}#rst div:nth-child(6){animation-delay:.42s}#rst div:nth-child(7){animation-delay:.5s}
 @keyframes rowIn{from{opacity:0;transform:translateX(-30px)}}
 @media(prefers-reduced-motion:reduce){.scr.on,.hcards .hc,.panel,#rst div{animation:none}}
+/* idle life: layered animations so hit / low-HP effects don't cancel the bob */
+@keyframes ptIdle{50%{translate:0 -3px}}
+.pt{animation:ptIdle 3s ease-in-out infinite}.p2 .pt{animation-delay:-1.5s}
+.pt.hurt{animation:ptIdle 3s ease-in-out infinite,ptHurt .32s}
+.pt.lowp{animation:ptIdle 3s ease-in-out infinite,ptLow .5s infinite alternate}
+.pt.lowp.hurt{animation:ptIdle 3s ease-in-out infinite,ptLow .5s infinite alternate,ptHurt .32s}
+.pt.ko{animation:none}
+#tm.tk{animation:tmTk .3s}@keyframes tmTk{30%{transform:scale(1.14);color:#fff}}
+@media(prefers-reduced-motion:reduce){.pt{animation:none!important}}
 </style></head><body>
 <div id="rot">📱↻<br>Rotate your iPad to landscape<br>to play BARISTA RUMBLE</div>
 <div id="stage">
@@ -335,7 +344,7 @@ ctx.restore();
 if(flashA>.02){ctx.globalAlpha=flashA;ctx.fillStyle='#fff';ctx.fillRect(0,0,1280,720);ctx.globalAlpha=1}
 F.forEach((f,i)=>{hudUpd(f,i);padUpd(f,i);
 const ok=phase==='fight'&&f.mis>=100&&f.sp<=0&&f.stun<=0,on=phase==='fight'&&f.stun<=0&&f.sp<=0;$('b'+i+'b').classList.toggle('rdy',ok);$('b'+i+'b').classList.toggle('off',!ok);$('b'+i+'a').classList.toggle('off',!on);const bl=$('b'+i+'c');bl.classList.toggle('dn',f.blk);bl.classList.toggle('off',!(phase==='fight'&&f.stun<=0&&f.sp<=0))});
-$('tm').textContent=sudden?'∞':Math.ceil(timer);$('tm').classList.toggle('low',!sudden&&timer<=10&&phase==='fight');$('rdl').textContent=sudden?'SUDDEN DEATH':rLabel()}
+{const s=sudden?'∞':Math.ceil(timer),e=$('tm');if(e.textContent!=s){e.textContent=s;if(!sudden&&timer>10&&phase==='fight'){e.classList.remove('tk');void e.offsetWidth;e.classList.add('tk')}}}$('tm').classList.toggle('low',!sudden&&timer<=10&&phase==='fight');$('rdl').textContent=sudden?'SUDDEN DEATH':rLabel()}
 /* ===== RESULT ===== */
 function showResult(){cleanFx();const w=winner,l=1-w;$('rw').textContent=FD[w].n+' WINS!';$('rwin').src=ASSETS[FD[w].im];$('rlos').src=ASSETS[FD[l].im];
 const r=(k,f)=>`<div><span>${k}</span><span>${f(F[0])} — ${f(F[1])}</span></div>`;
@@ -346,7 +355,7 @@ function go(n){cleanFx();const m={menu:'menu',how:'how',opt:'opt',start:'game',r
 if(n==='start'){newMatch();try{screen.orientation.lock('landscape').catch(()=>{})}catch(e){}}}
 function optText(){$('oS').textContent='SOUND: '+(snd?'ON':'OFF');$('oM').textContent='MUSIC: '+(mus?'ON':'OFF');$('oV').textContent='VIBRATION: '+(navigator.vibrate?(vib?'ON':'OFF'):'N/A')}
 function resize(){const W=innerWidth,H=innerHeight,s=Math.min(W/1280,H/720);$('stage').style.transform=`translate(${(W-1280*s)/2}px,${(H-720*s)/2}px) scale(${s})`;K=Math.min(2,s*(devicePixelRatio||1));cv.width=Math.round(1280*K);cv.height=Math.round(720*K)}
-function init(){document.addEventListener('animationend',e=>e.target.classList&&e.target.classList.remove('hurt','hit','pop3'));$('wa').innerHTML=$('wb').innerHTML='<i></i>'.repeat(CFG.wins);document.documentElement.style.setProperty('--arena',`url(${ASSETS.arena})`);$('mimg').src=ASSETS.menu;['b0a','b0b','b0c','b1a','b1b','b1c'].forEach(k=>$(k).style.backgroundImage='url('+ASSETS[k]+')');['b0a','b0b','b0c','b1a','b1b','b1c'].forEach(k=>{$(k).insertAdjacentHTML('afterbegin','<i class="rg"></i>');RG[k]=$(k).firstChild});['hw0','hw1','hw2'].forEach((k,i)=>$(k).src=ASSETS[['b0a','b0c','b0b'][i]]);$('mq').onclick=()=>{const q=$('mqt');q.style.display='block';setTimeout(()=>q.style.display='none',1800)};
+function init(){document.addEventListener('animationend',e=>e.target.classList&&e.target.classList.remove('hurt','hit','pop3','tk'));$('wa').innerHTML=$('wb').innerHTML='<i></i>'.repeat(CFG.wins);document.documentElement.style.setProperty('--arena',`url(${ASSETS.arena})`);$('mimg').src=ASSETS.menu;['b0a','b0b','b0c','b1a','b1b','b1c'].forEach(k=>$(k).style.backgroundImage='url('+ASSETS[k]+')');['b0a','b0b','b0c','b1a','b1b','b1c'].forEach(k=>{$(k).insertAdjacentHTML('afterbegin','<i class="rg"></i>');RG[k]=$(k).firstChild});['hw0','hw1','hw2'].forEach((k,i)=>$(k).src=ASSETS[['b0a','b0c','b0b'][i]]);$('mq').onclick=()=>{const q=$('mqt');q.style.display='block';setTimeout(()=>q.style.display='none',1800)};
 [0,1].forEach(i=>$('pt'+i).getContext('2d').drawImage(IM['pt'+i],0,0,120,100));
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{initAudio();sfx('ui');go(b.dataset.go)}));
 $('oS').onclick=()=>{initAudio();snd=!snd;optText();sfx('ui')};$('oM').onclick=()=>{initAudio();mus=!mus;optText()};$('oV').onclick=()=>{vib=!vib;optText();hap(40)};optText();
